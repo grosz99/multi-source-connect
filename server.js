@@ -64,6 +64,7 @@ info:
   version: 'v1'
 servers:
   - url: https://${host}
+  - url: http://${host}
 paths:
   /api/tables:
     get:
@@ -138,7 +139,12 @@ paths:
 
 // Serve the logo
 app.get('/logo.png', (req, res) => {
-  res.sendFile(__dirname + '/logo.png');
+  try {
+    res.sendFile(__dirname + '/logo.png');
+  } catch (error) {
+    console.error('Error serving logo:', error);
+    res.status(404).send('Logo not found');
+  }
 });
 
 // API Endpoints
