@@ -83,6 +83,98 @@ paths:
                       type: string
                     row_count:
                       type: integer
+  /api/shopping:
+    get:
+      operationId: getShoppingData
+      summary: Get data from the Shopping table
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Shopping data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /api/shopping/schema:
+    get:
+      operationId: getShoppingSchema
+      summary: Get schema information for the Shopping table
+      responses:
+        '200':
+          description: Shopping table schema
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    column_name:
+                      type: string
+                    data_type:
+                      type: string
+                    is_nullable:
+                      type: boolean
+  /api/house_prices:
+    get:
+      operationId: getHousePricesData
+      summary: Get data from the HOUSE_PRICES table
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: House prices data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /api/house_prices/schema:
+    get:
+      operationId: getHousePricesSchema
+      summary: Get schema information for the HOUSE_PRICES table
+      responses:
+        '200':
+          description: House prices table schema
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    column_name:
+                      type: string
+                    data_type:
+                      type: string
+                    is_nullable:
+                      type: boolean
   /api/query:
     post:
       operationId: queryTable
@@ -253,6 +345,92 @@ app.post('/api/query', async (req, res) => {
     res.json(data || []);
   } catch (error) {
     console.error('Exception when querying:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Shopping table data
+app.get('/api/shopping', async (req, res) => {
+  try {
+    const { limit = 100, offset = 0 } = req.query;
+    
+    const { data, error } = await supabase
+      .from('Shopping')
+      .select('*')
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    if (error) {
+      console.error('Error fetching shopping data:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    res.json(data || []);
+  } catch (error) {
+    console.error('Exception when fetching shopping data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Shopping table schema
+app.get('/api/shopping/schema', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name, data_type, is_nullable')
+      .eq('table_name', 'Shopping')
+      .eq('table_schema', 'public');
+
+    if (error) {
+      console.error('Error fetching shopping schema:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    res.json(data || []);
+  } catch (error) {
+    console.error('Exception when fetching shopping schema:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get HOUSE_PRICES table data
+app.get('/api/house_prices', async (req, res) => {
+  try {
+    const { limit = 100, offset = 0 } = req.query;
+    
+    const { data, error } = await supabase
+      .from('HOUSE_PRICES')
+      .select('*')
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    if (error) {
+      console.error('Error fetching house prices data:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    res.json(data || []);
+  } catch (error) {
+    console.error('Exception when fetching house prices data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get HOUSE_PRICES table schema
+app.get('/api/house_prices/schema', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name, data_type, is_nullable')
+      .eq('table_name', 'HOUSE_PRICES')
+      .eq('table_schema', 'public');
+
+    if (error) {
+      console.error('Error fetching house prices schema:', error);
+      return res.status(500).json({ error: error.message });
+    }
+    
+    res.json(data || []);
+  } catch (error) {
+    console.error('Exception when fetching house prices schema:', error);
     res.status(500).json({ error: error.message });
   }
 });
