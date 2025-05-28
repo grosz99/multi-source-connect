@@ -57,14 +57,13 @@ app.get('/openapi.yaml', (req, res) => {
   const host = req.headers.host;
   res.setHeader('Content-Type', 'text/yaml');
   res.send(`
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: Supabase Data Explorer API
   description: API for exploring and querying Supabase database tables
   version: 'v1'
 servers:
   - url: https://${host}
-  - url: http://${host}
 paths:
   /api/tables:
     get:
