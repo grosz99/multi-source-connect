@@ -149,32 +149,40 @@ app.get('/logo.png', (req, res) => {
 // API Endpoints
 app.get('/api/tables', async (req, res) => {
   try {
-    // Query to get all tables in the public schema
-    const { data: tables, error } = await supabase
-      .from('pg_tables')
-      .select('tablename')
-      .eq('schemaname', 'public');
+    // Use a direct SQL query to get tables from information_schema
+    const { data, error } = await supabase.rpc('list_tables');
 
     if (error) {
       console.error('Error fetching tables:', error);
-      return res.status(500).json({ error: error.message });
+      
+      // Fallback approach if RPC fails
+      try {
+        // Try a direct query to information_schema
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('information_schema.tables')
+          .select('table_name')
+          .eq('table_schema', 'public')
+          .eq('table_type', 'BASE TABLE');
+        
+        if (fallbackError) {
+          console.error('Fallback error:', fallbackError);
+          return res.status(500).json({ error: error.message });
+        }
+        
+        // Format the response
+        const tables = fallbackData.map(table => ({
+          table_name: table.table_name,
+          row_count: 0 // We don't have row counts in this fallback
+        }));
+        
+        return res.json(tables);
+      } catch (fallbackCatchError) {
+        console.error('Fallback catch error:', fallbackCatchError);
+        return res.status(500).json({ error: error.message });
+      }
     }
     
-    // Get row counts for each table
-    const tablesWithCounts = await Promise.all(
-      tables.map(async (table) => {
-        const { count, error: countError } = await supabase
-          .from(table.tablename)
-          .select('*', { count: 'exact', head: true });
-        
-        return {
-          table_name: table.tablename,
-          row_count: countError ? 0 : count
-        };
-      })
-    );
-    
-    res.json(tablesWithCounts);
+    res.json(data || []);
   } catch (error) {
     console.error('Exception when fetching tables:', error);
     res.status(500).json({ error: error.message });
